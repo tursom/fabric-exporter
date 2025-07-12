@@ -22,6 +22,7 @@ public class TickDurationMaxCollector extends TickDurationCollector {
     @Override
     public void register() {
         io.micrometer.core.instrument.Gauge.builder(prefix(NAME), this, TickDurationMaxCollector::getTickDurationMax)
+                .strongReference(true)
                 .register(registry);
     }
 }

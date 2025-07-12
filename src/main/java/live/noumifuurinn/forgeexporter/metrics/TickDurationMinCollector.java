@@ -1,6 +1,6 @@
 package live.noumifuurinn.forgeexporter.metrics;
 
-
+import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 
 public class TickDurationMinCollector extends TickDurationCollector {
@@ -12,7 +12,7 @@ public class TickDurationMinCollector extends TickDurationCollector {
 
     private long getTickDurationMin() {
         long min = Long.MAX_VALUE;
-        for (Long val : getTickDurations()) {
+        for (long val : getTickDurations()) {
             if (val < min) {
                 min = val;
             }
@@ -22,7 +22,8 @@ public class TickDurationMinCollector extends TickDurationCollector {
 
     @Override
     public void register() {
-        io.micrometer.core.instrument.Gauge.builder(prefix(NAME), this, TickDurationMinCollector::getTickDurationMin)
+        Gauge.builder(prefix(NAME), this, TickDurationMinCollector::getTickDurationMin)
+                .strongReference(true)
                 .register(registry);
     }
 }

@@ -21,6 +21,7 @@ public class TickDurationMedianCollector extends TickDurationCollector {
     @Override
     public void register() {
         io.micrometer.core.instrument.Gauge.builder(prefix(NAME), this, TickDurationMedianCollector::getTickDurationMedian)
+                .strongReference(true)
                 .register(registry);
     }
 }

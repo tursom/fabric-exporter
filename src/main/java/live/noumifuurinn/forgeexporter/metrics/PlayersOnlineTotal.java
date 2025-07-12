@@ -1,6 +1,7 @@
 package live.noumifuurinn.forgeexporter.metrics;
 
 import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import net.minecraft.server.level.ServerLevel;
 
@@ -10,10 +11,10 @@ public class PlayersOnlineTotal extends WorldMetric {
     }
 
     @Override
-    protected void register(ServerLevel world) {
+    protected Meter register(ServerLevel world) {
         String name = world.dimension().location().getPath();
         String mod = world.dimension().location().getNamespace();
-        Gauge.builder(prefix("players.online.total"), world, w -> w.getPlayers(p -> true).size())
+        return Gauge.builder(prefix("players.online.total"), world, w -> w.getPlayers(p -> true).size())
                 .tag("world", name)
                 .tag("mod", mod)
                 .register(registry);

@@ -31,6 +31,10 @@ public class MetricsServer {
     }
 
     public void start() {
+        if (config.prometheus.enable) {
+            startPrometheus(config.prometheus);
+        }
+
         new Processor(registry).enable();
         new GarbageCollectorWrapper(registry).enable();
         new Entities(registry).enable();
@@ -46,9 +50,6 @@ public class MetricsServer {
         new Tps(registry).enable();
         new WorldSize(registry).enable();
 
-        if (config.prometheus.enable) {
-            startPrometheus(config.prometheus);
-        }
     }
 
     @SneakyThrows

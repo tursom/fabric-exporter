@@ -24,6 +24,7 @@ public class TickDurationAverageCollector extends TickDurationCollector {
     @Override
     public void register() {
         Gauge.builder(prefix(NAME), this, TickDurationAverageCollector::getTickDurationAverage)
+                .strongReference(true)
                 .register(registry);
     }
 }
