@@ -2,15 +2,17 @@ package live.noumifuurinn.forgeexporter;
 
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.exporter.common.TextFormat;
+import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpStatus;
+import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.handler.AbstractHandler;
+import org.eclipse.jetty.server.Response;
+import org.eclipse.jetty.util.Callback;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 
-public class MetricsController extends AbstractHandler {
+public class MetricsController extends Handler.Abstract {
     private final MetricRegistry metricRegistry = MetricRegistry.getInstance();
     private final FabricExporter exporter;
 
@@ -19,12 +21,11 @@ public class MetricsController extends AbstractHandler {
     }
 
     @Override
-    public void handle(String target, Request request, HttpServletRequest httpServletRequest,
-            HttpServletResponse response) throws IOException {
-
-        if (!target.equals("/metrics")) {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND);
-            return;
+    public boolean handle(Request request, Response response, Callback callback) throws Exception {
+        if (!request.getHttpURI().getPath().equals("/metrics")) {
+            response.setStatus(HttpStatus.NOT_FOUND_404);
+            callback.succeeded();
+            return true;
         }
 
         try {
@@ -33,16 +34,23 @@ public class MetricsController extends AbstractHandler {
             });
 
             response.setStatus(HttpStatus.OK_200);
-            response.setContentType(TextFormat.CONTENT_TYPE_004);
-            response.setCharacterEncoding("UTF-8");
+            response.getHeaders().put(HttpHeader.CONTENT_TYPE, TextFormat.CONTENT_TYPE_004);
+            response.getHeaders().put(HttpHeader.CONTENT_ENCODING, "UTF-8");
 
-            TextFormat.write004(response.getWriter(), CollectorRegistry.defaultRegistry.metricFamilySamples());
-
-            request.setHandled(true);
+            // 使用 OutputStreamWriter 写入响应
+            try (OutputStreamWriter writer = new OutputStreamWriter(
+                    Response.asBufferedOutputStream(request, response),
+                    StandardCharsets.UTF_8)) {
+                TextFormat.write004(writer, CollectorRegistry.defaultRegistry.metricFamilySamples());
+            }
+            callback.succeeded();
         } catch (Throwable e) {
             exporter.getLogger().warn("Failed to read server statistic: " + e.getMessage());
             exporter.getLogger().warn("Failed to read server statistic: ", e);
-            response.sendError(HttpStatus.INTERNAL_SERVER_ERROR_500);
+            response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR_500);
+            callback.failed(e);
         }
+
+        return true;
     }
 }

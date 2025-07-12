@@ -10,12 +10,6 @@
   "icon": "assets/fabric-exporter/icon.png",
   "environment": "*",
   "entrypoints": {
-    "fabric-datagen": [
-      "live.noumifuurinn.forgeexporter.client.FabricExporterDataGenerator"
-    ],
-    "client": [
-      "live.noumifuurinn.forgeexporter.client.FabricExporterClient"
-    ],
     "main": [
       "live.noumifuurinn.forgeexporter.FabricExporter"
     ]

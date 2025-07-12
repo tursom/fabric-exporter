@@ -72,10 +72,10 @@ public class FabricExporter implements ModInitializer {
     private void startMetricsServer() {
         String host = config.host;
         Integer port = config.port;
+        String unixSocketPath = config.unixSocketPath;
 
-        server = new MetricsServer(host, port, this);
+        server = new MetricsServer(host, port, unixSocketPath, this);
         server.start();
-        LOGGER.info("Started Prometheus metrics endpoint at: " + host + ":" + port);
     }
 
     public void stop(MinecraftServer ignore) {
