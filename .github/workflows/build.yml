@@ -42,10 +42,10 @@ jobs:
         run: |
           mkdir -p jars
           cp build/libs/*.jar jars/
-          # 重命名去掉 -all 后缀
+          # 删除带 -all 后缀的 jar 包
           for file in jars/*-all.jar; do
             if [ -f "$file" ]; then
-              mv "$file" "${file%-all.jar}.jar"
+              rm "$file"
             fi
           done
         shell: bash
