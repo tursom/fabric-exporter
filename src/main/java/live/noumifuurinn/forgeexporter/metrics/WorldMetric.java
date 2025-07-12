@@ -1,32 +1,21 @@
 package live.noumifuurinn.forgeexporter.metrics;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import live.noumifuurinn.forgeexporter.FabricExporter;
-import io.prometheus.client.Collector;
 import net.minecraft.server.level.ServerLevel;
 
 public abstract class WorldMetric extends Metric {
-    public WorldMetric(Collector collector) {
-        super(collector);
+    public WorldMetric(MeterRegistry registry) {
+        super(registry);
     }
 
     @Override
-    public final void doCollect() {
-        clear();
+    public final void register() {
         for (ServerLevel world : FabricExporter.getServer().getAllLevels()) {
-            collect(world);
+            register(world);
         }
     }
 
-    protected abstract void clear();
-    protected abstract void collect(ServerLevel world);
-/*
-    protected String getEntityName(EntityType<> type) {
-        try {
-            return type.getKey().getKey();y
-        } catch (Throwable t) {
-            // Note: The entity type key above was introduced in 1.14. Older implementations should fallback here.
-            return type.name();
-        }
-    }
-    */
+
+    protected abstract void register(ServerLevel world);
 }

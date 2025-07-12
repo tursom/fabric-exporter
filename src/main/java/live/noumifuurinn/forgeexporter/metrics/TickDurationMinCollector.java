@@ -1,18 +1,13 @@
 package live.noumifuurinn.forgeexporter.metrics;
 
 
-import io.prometheus.client.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
 
 public class TickDurationMinCollector extends TickDurationCollector {
-    private static final String NAME = "tick_duration_min";
+    private static final String NAME = "tick.duration.min";
 
-    private static final Gauge TD = Gauge.build()
-            .name(prefix(NAME))
-            .help("Min duration of server tick (nanoseconds)")
-            .create();
-
-    public TickDurationMinCollector() {
-        super(TD, NAME);
+    public TickDurationMinCollector(MeterRegistry registry) {
+        super(registry);
     }
 
     private long getTickDurationMin() {
@@ -26,8 +21,9 @@ public class TickDurationMinCollector extends TickDurationCollector {
     }
 
     @Override
-    public void doCollect() {
-        TD.set(getTickDurationMin());
+    public void register() {
+        io.micrometer.core.instrument.Gauge.builder(prefix(NAME), this, TickDurationMinCollector::getTickDurationMin)
+                .register(registry);
     }
 }
 

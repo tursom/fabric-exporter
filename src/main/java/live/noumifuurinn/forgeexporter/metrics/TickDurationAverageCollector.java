@@ -1,18 +1,15 @@
 package live.noumifuurinn.forgeexporter.metrics;
 
 
-import io.prometheus.client.Gauge;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
 
 public class TickDurationAverageCollector extends TickDurationCollector {
-    private static final String NAME = "tick_duration_average";
+    private static final String NAME = "tick.duration.average";
 
-    private static final Gauge TD = Gauge.build()
-            .name(prefix(NAME))
-            .help("Average duration of server tick (nanoseconds)")
-            .create();
 
-    public TickDurationAverageCollector() {
-        super(TD, NAME);
+    public TickDurationAverageCollector(MeterRegistry registry) {
+        super(registry);
     }
 
     private long getTickDurationAverage() {
@@ -25,7 +22,8 @@ public class TickDurationAverageCollector extends TickDurationCollector {
     }
 
     @Override
-    public void doCollect() {
-        TD.set(getTickDurationAverage());
+    public void register() {
+        Gauge.builder(prefix(NAME), this, TickDurationAverageCollector::getTickDurationAverage)
+                .register(registry);
     }
 }

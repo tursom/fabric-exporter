@@ -1,20 +1,15 @@
 package live.noumifuurinn.forgeexporter.metrics;
 
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
 import live.noumifuurinn.forgeexporter.FabricExporter;
 import live.noumifuurinn.forgeexporter.tps.TpsCollector;
-import io.prometheus.client.Gauge;
 
 public class Tps extends Metric {
+    private final TpsCollector tpsCollector = new TpsCollector();
 
-    private static final Gauge TPS = Gauge.build()
-            .name(prefix("tps"))
-            .help("Server TPS (ticks per second)")
-            .create();
-
-    private TpsCollector tpsCollector = new TpsCollector();
-
-    public Tps() {
-        super(TPS);
+    public Tps(MeterRegistry registry) {
+        super(registry);
     }
 
     @Override
@@ -30,7 +25,9 @@ public class Tps extends Metric {
     }
 
     @Override
-    public void doCollect() {
-        TPS.set(tpsCollector.getAverageTPS());
+    public void register() {
+        Gauge.builder(prefix("tps"), tpsCollector, TpsCollector::getAverageTPS)
+                .description("Server TPS (ticks per second)")
+                .register(registry);
     }
 }

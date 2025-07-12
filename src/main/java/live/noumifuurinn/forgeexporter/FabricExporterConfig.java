@@ -6,10 +6,16 @@ import me.shedaniel.autoconfig.annotation.ConfigEntry;
 
 @Config(name = "fabric-exporter")
 public class FabricExporterConfig implements ConfigData {
-    @ConfigEntry.BoundedDiscrete(min = 1, max = 65535)
-    public int port = 9225;
+    public PrometheusConfig prometheus = new PrometheusConfig();
 
-    public String host = "0.0.0.0";
+    public static class PrometheusConfig {
+        public boolean enable = true;
 
-    public String unixSocketPath = "";
+        @ConfigEntry.BoundedDiscrete(min = 1, max = 65535)
+        public int port = 9225;
+
+        public String host = "0.0.0.0";
+
+        public String unixSocketPath = "";
+    }
 }

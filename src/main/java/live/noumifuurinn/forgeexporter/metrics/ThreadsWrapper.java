@@ -1,24 +1,17 @@
 package live.noumifuurinn.forgeexporter.metrics;
 
-import io.prometheus.client.Collector;
-import io.prometheus.client.hotspot.ThreadExports;
-
-import java.util.List;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics;
 
 public class ThreadsWrapper extends Metric {
-    public ThreadsWrapper() {
-        super(new ThreadExportsCollector());
+    private final JvmThreadMetrics jvmThreadMetrics = new JvmThreadMetrics();
+
+    public ThreadsWrapper(MeterRegistry registry) {
+        super(registry);
     }
 
     @Override
-    protected void doCollect() {}
-
-    private static class ThreadExportsCollector extends Collector {
-        private static final ThreadExports threadExports = new ThreadExports();
-
-        @Override
-        public List<MetricFamilySamples> collect() {
-            return HotspotPrefixer.prefixFromCollector(threadExports);
-        }
+    public void register() {
+        jvmThreadMetrics.bindTo(registry);
     }
 }

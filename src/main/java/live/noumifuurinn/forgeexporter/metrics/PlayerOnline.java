@@ -1,81 +1,80 @@
 package live.noumifuurinn.forgeexporter.metrics;
 
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
 import live.noumifuurinn.forgeexporter.FabricExporter;
-import io.prometheus.client.Gauge;
+import lombok.Data;
+import lombok.SneakyThrows;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.players.PlayerList;
 
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 public class PlayerOnline extends Metric {
-    public static class PlayerCacheItem {
-        private String name;
-        private String uuid;
+    private final ConcurrentMap<UUID, PlayerStatus> status = new ConcurrentHashMap<>();
 
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public String getUuid() {
-            return uuid;
-        }
-
-        public void setUuid(String uuid) {
-            this.uuid = uuid;
-        }
-    }
-
-    private static final Gauge PLAYERS_WITH_NAMES = Gauge.build()
-            .name(prefix("player_online"))
-            .help("Online state by player name")
-            .labelNames("name", "uid")
-            .create();
-    private static final Map<UUID, String> userMap = new ConcurrentHashMap<>();
-    boolean init = false;
-
-    public PlayerOnline() {
-        super(PLAYERS_WITH_NAMES);
+    public PlayerOnline(MeterRegistry registry) {
+        super(registry);
     }
 
     @Override
-    protected void doCollect() {
-        if(!init) {
-            init = true;
-            for (var player : FabricExporter.getServer().getProfileCache().profilesByUUID.values()) {
-                userMap.put(player.getProfile().getId(), player.getProfile().getName());
-            }
-        }
+    public void register() {
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            register(handler.player);
+        });
 
-        PLAYERS_WITH_NAMES.clear();
-        PlayerList list = FabricExporter.getServer().getPlayerList();
-        List<ServerPlayer> newPlayers = list.getPlayers().stream().filter(p -> !userMap.containsKey(p.getUUID())).toList();
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+            remove(handler.player);
+        });
 
-        List<Map.Entry<UUID, String>> players = userMap.entrySet().stream().toList();
-        for(Map.Entry<UUID, String> entry : players) {
-            ServerPlayer player = list.getPlayer(entry.getKey());
-            if(player == null) {
-                PLAYERS_WITH_NAMES.labels(entry.getValue(), entry.getKey().toString()).set(0);
-            } else {
-                String name = player.getGameProfile().getName();
-                PLAYERS_WITH_NAMES.labels(name, entry.getKey().toString()).set(1);
-                userMap.put(entry.getKey(), name);
-            }
-        }
-
-        for(ServerPlayer player : newPlayers) {
-            String name = player.getGameProfile().getName();
-
-            PLAYERS_WITH_NAMES.labels(name, player.getUUID().toString()).set(1);
-            userMap.put(player.getUUID(), name);
+        for (ServerPlayer player : FabricExporter.getServer().getPlayerList().getPlayers()) {
+            register(player);
         }
     }
 
+    private void register(ServerPlayer player) {
+        status.computeIfAbsent(
+                player.getUUID(),
+                ignore -> {
+                    PlayerStatus playerStatus = new PlayerStatus();
+                    playerStatus.state = 1;
+                    playerStatus.gauge = Gauge.builder(prefix("player.online"), playerStatus, PlayerStatus::getState)
+                            .description("Online state by player name")
+                            .tag("name", player.getName().getString())
+                            .tag("uid", player.getUUID().toString())
+                            .register(registry);
+                    return playerStatus;
+                }
+        );
+    }
 
+    private void remove(ServerPlayer player) {
+        PlayerStatus playerStatus = status.get(player.getUUID());
+        if (playerStatus == null || playerStatus.state == 0) {
+            return;
+        }
+
+        playerStatus.state = 0;
+        Thread.ofVirtual().start(() -> remove(playerStatus));
+    }
+
+    @SneakyThrows
+    private void remove(PlayerStatus playerStatus) {
+        Gauge gauge = playerStatus.gauge;
+        if (gauge == null) {
+            return;
+        }
+
+        // 等待5分钟后删除指标
+        Thread.sleep(5 * 60_000);
+        registry.remove(gauge);
+    }
+
+    @Data
+    private static class PlayerStatus {
+        private double state;
+        private Gauge gauge;
+    }
 }

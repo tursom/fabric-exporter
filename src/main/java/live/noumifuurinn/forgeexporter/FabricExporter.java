@@ -1,5 +1,6 @@
 package live.noumifuurinn.forgeexporter;
 
+import io.micrometer.core.instrument.composite.CompositeMeterRegistry;
 import lombok.SneakyThrows;
 import me.shedaniel.autoconfig.AutoConfig;
 import me.shedaniel.autoconfig.serializer.Toml4jConfigSerializer;
@@ -15,15 +16,17 @@ import java.util.Map;
 public class FabricExporter implements ModInitializer {
     private static final Logger LOGGER = LogManager.getLogger();
     private static MinecraftServer mcServer;
-    private final static Map<Object, Runnable> serverTickReg = new java.util.concurrent.ConcurrentHashMap<>();
-
+    private static final Map<Object, Runnable> serverTickReg = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final CompositeMeterRegistry registry = new CompositeMeterRegistry();
     private static FabricExporterConfig config;
-    private MetricsServer server;
+
+    private MetricsServer metricsServer;
 
     @Override
     public void onInitialize() {
         AutoConfig.register(FabricExporterConfig.class, Toml4jConfigSerializer::new);
         config = AutoConfig.getConfigHolder(FabricExporterConfig.class).getConfig();
+        metricsServer = new MetricsServer(registry, this, config);
 
         // 注册服务器启动事件
         ServerLifecycleEvents.SERVER_STARTED.register(this::onServerStarted);
@@ -38,8 +41,7 @@ public class FabricExporter implements ModInitializer {
 
     public void onServerStarted(MinecraftServer server) {
         mcServer = server;
-
-        startMetricsServer();
+        metricsServer.start();
     }
 
     private void onServerTick(MinecraftServer server) {
@@ -68,19 +70,9 @@ public class FabricExporter implements ModInitializer {
         return mcServer;
     }
 
-    @SneakyThrows
-    private void startMetricsServer() {
-        String host = config.host;
-        Integer port = config.port;
-        String unixSocketPath = config.unixSocketPath;
-
-        server = new MetricsServer(host, port, unixSocketPath, this);
-        server.start();
-    }
-
     public void stop(MinecraftServer ignore) {
         try {
-            server.stop();
+            metricsServer.stop();
         } catch (Exception e) {
             LOGGER.warn("Failed to stop metrics server gracefully: " + e.getMessage());
             LOGGER.warn("Failed to stop metrics server gracefully", e);

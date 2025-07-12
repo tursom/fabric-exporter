@@ -1,6 +1,11 @@
 package live.noumifuurinn.forgeexporter;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.composite.CompositeMeterRegistry;
+import io.micrometer.prometheusmetrics.PrometheusConfig;
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
 import live.noumifuurinn.forgeexporter.metrics.*;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import net.minecraft.util.StringUtil;
 import org.eclipse.jetty.server.Server;
@@ -13,57 +18,64 @@ import java.nio.file.Path;
 
 @Slf4j
 public class MetricsServer {
-
-    private final String host;
-    private final int port;
-    private final String unixSocketPath;
+    private final CompositeMeterRegistry registry;
     private final FabricExporter prometheusExporter;
+    private final FabricExporterConfig config;
 
     private Server server;
 
-    public MetricsServer(String host, int port, String unixSocketPath, FabricExporter prometheusExporter) {
-        this.host = host;
-        this.port = port;
-        this.unixSocketPath = unixSocketPath;
+    public MetricsServer(CompositeMeterRegistry registry, FabricExporter prometheusExporter, FabricExporterConfig config) {
+        this.registry = registry;
         this.prometheusExporter = prometheusExporter;
+        this.config = config;
     }
 
-    public void start() throws Exception {
-        MetricRegistry.getInstance().register(new Processor());
-        MetricRegistry.getInstance().register(new GarbageCollectorWrapper());
-        MetricRegistry.getInstance().register(new Entities());
-        MetricRegistry.getInstance().register(new LoadedChunks());
-        MetricRegistry.getInstance().register(new Memory());
-        MetricRegistry.getInstance().register(new PlayerOnline());
-        MetricRegistry.getInstance().register(new PlayersOnlineTotal());
-        MetricRegistry.getInstance().register(new ThreadsWrapper());
-        MetricRegistry.getInstance().register(new TickDurationAverageCollector());
-        MetricRegistry.getInstance().register(new TickDurationMaxCollector());
-        MetricRegistry.getInstance().register(new TickDurationMedianCollector());
-        MetricRegistry.getInstance().register(new TickDurationMinCollector());
-        MetricRegistry.getInstance().register(new Tps());
-        MetricRegistry.getInstance().register(new WorldSize());
+    public void start() {
+        new Processor(registry).enable();
+        new GarbageCollectorWrapper(registry).enable();
+        new Entities(registry).enable();
+        new LoadedChunks(registry).enable();
+        new Memory(registry).enable();
+        new PlayerOnline(registry).enable();
+        new PlayersOnlineTotal(registry).enable();
+        new ThreadsWrapper(registry).enable();
+        new TickDurationAverageCollector(registry).enable();
+        new TickDurationMaxCollector(registry).enable();
+        new TickDurationMedianCollector(registry).enable();
+        new TickDurationMinCollector(registry).enable();
+        new Tps(registry).enable();
+        new WorldSize(registry).enable();
+
+        if (config.prometheus.enable) {
+            startPrometheus(config.prometheus);
+        }
+    }
+
+    @SneakyThrows
+    private void startPrometheus(FabricExporterConfig.PrometheusConfig config) {
+        PrometheusMeterRegistry prometheusMeterRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
+        registry.add(prometheusMeterRegistry);
 
         GzipHandler handler = new GzipHandler();
-        handler.setHandler(new MetricsController(prometheusExporter));
+        handler.setHandler(new MetricsController(prometheusExporter, prometheusMeterRegistry));
 
-        if (!StringUtil.isBlank(unixSocketPath) && isUnixSocketSupported()) {
+        if (!StringUtil.isBlank(config.unixSocketPath) && isUnixSocketSupported()) {
             // 使用 Unix Socket
             server = new Server();
             UnixDomainServerConnector connector = new UnixDomainServerConnector(server);
-            connector.setUnixDomainPath(Path.of(unixSocketPath));
+            connector.setUnixDomainPath(Path.of(config.unixSocketPath));
             // 可选：设置其他参数
             connector.setAcceptQueueSize(128);
             connector.setAcceptedReceiveBufferSize(8192);
             connector.setAcceptedSendBufferSize(8192);
 
             server.addConnector(connector);
-            log.info("Started Prometheus metrics endpoint at: " + unixSocketPath);
+            log.info("Started Prometheus metrics endpoint at: " + config.unixSocketPath);
         } else {
             // 使用 TCP Socket
-            InetSocketAddress address = new InetSocketAddress(host, port);
+            InetSocketAddress address = new InetSocketAddress(config.host, config.port);
             server = new Server(address);
-            log.info("Started Prometheus metrics endpoint at: " + host + ":" + port);
+            log.info("Started Prometheus metrics endpoint at: " + config.host + ":" + config.port);
         }
         server.setHandler(handler);
 

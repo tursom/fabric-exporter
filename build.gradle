@@ -41,6 +41,16 @@ dependencies {
         exclude(group: "net.fabricmc.fabric-api")
     }
 
+    def micrometerVersion = "1.15.1"
+    shadow(implementation("io.micrometer:micrometer-registry-prometheus:$micrometerVersion")) {
+        exclude group: "org.apache.logging.log4j", module: "log4j-api"
+        exclude group: "org.apache.logging.log4j", module: "log4j-core"
+        exclude group: "commons-logging", module: "commons-logging"
+        exclude group: "org.slf4j", module: "slf4j-api"
+        exclude group: "org.slf4j", module: "slf4j-simple"
+        exclude group: "org.slf4j", module: "slf4j-log4j12"
+    }
+
     def jettyVersion = "12.0.23"
     shadow(implementation("org.eclipse.jetty:jetty-unixdomain-server:${jettyVersion}")) {
         exclude group: "org.apache.logging.log4j", module: "log4j-api"
@@ -51,38 +61,6 @@ dependencies {
         exclude group: "org.slf4j", module: "slf4j-log4j12"
     }
     shadow(implementation("org.eclipse.jetty:jetty-server:${jettyVersion}")) {
-        exclude group: "org.apache.logging.log4j", module: "log4j-api"
-        exclude group: "org.apache.logging.log4j", module: "log4j-core"
-        exclude group: "commons-logging", module: "commons-logging"
-        exclude group: "org.slf4j", module: "slf4j-api"
-        exclude group: "org.slf4j", module: "slf4j-simple"
-        exclude group: "org.slf4j", module: "slf4j-log4j12"
-    }
-    shadow(implementation("io.prometheus:simpleclient_common:0.16.0")) {
-        exclude group: "org.apache.logging.log4j", module: "log4j-api"
-        exclude group: "org.apache.logging.log4j", module: "log4j-core"
-        exclude group: "commons-logging", module: "commons-logging"
-        exclude group: "org.slf4j", module: "slf4j-api"
-        exclude group: "org.slf4j", module: "slf4j-simple"
-        exclude group: "org.slf4j", module: "slf4j-log4j12"
-    }
-    shadow(implementation("io.prometheus:simpleclient_hotspot:0.16.0")) {
-        exclude group: "org.apache.logging.log4j", module: "log4j-api"
-        exclude group: "org.apache.logging.log4j", module: "log4j-core"
-        exclude group: "commons-logging", module: "commons-logging"
-        exclude group: "org.slf4j", module: "slf4j-api"
-        exclude group: "org.slf4j", module: "slf4j-simple"
-        exclude group: "org.slf4j", module: "slf4j-log4j12"
-    }
-    shadow(implementation("com.jayway.jsonpath:json-path:2.7.0")) {
-        exclude group: "org.apache.logging.log4j", module: "log4j-api"
-        exclude group: "org.apache.logging.log4j", module: "log4j-core"
-        exclude group: "commons-logging", module: "commons-logging"
-        exclude group: "org.slf4j", module: "slf4j-api"
-        exclude group: "org.slf4j", module: "slf4j-simple"
-        exclude group: "org.slf4j", module: "slf4j-log4j12"
-    }
-    shadow(implementation("io.rest-assured:rest-assured:5.1.1")) {
         exclude group: "org.apache.logging.log4j", module: "log4j-api"
         exclude group: "org.apache.logging.log4j", module: "log4j-core"
         exclude group: "commons-logging", module: "commons-logging"
@@ -189,6 +167,11 @@ shadowJar {
     relocateLib "org.hamcrest"
     relocateLib "org.objectweb"
     relocateLib "net.minidev"
+    relocateLib "io.micrometer"
+    relocateLib "google.protobuf"
+    relocateLib "com.google.protobuf"
+    relocateLib "org.HdrHistogram"
+    relocateLib "org.LatencyUtils"
 }
 
 assemble.dependsOn shadowJar

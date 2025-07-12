@@ -1,5 +1,7 @@
 package live.noumifuurinn.forgeexporter.utils;
 
+import lombok.SneakyThrows;
+
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -18,7 +20,8 @@ public class PathFileSize {
         this.path = path;
     }
 
-    public long getSize() throws IOException {
+    @SneakyThrows
+    public long getSize() {
         final AtomicLong size = new AtomicLong(0);
         Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {

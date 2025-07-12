@@ -1,7 +1,7 @@
 package live.noumifuurinn.forgeexporter.metrics;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import live.noumifuurinn.forgeexporter.FabricExporter;
-import io.prometheus.client.Gauge;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -13,8 +13,8 @@ public abstract class TickDurationCollector extends Metric {
      */
     private static long[] tickDurationReference = null;
 
-    public TickDurationCollector(Gauge gauge, String name) {
-        super(gauge);
+    public TickDurationCollector(MeterRegistry registry) {
+        super(registry);
 
         /*
          * If there is not yet a handle to the internal tick duration buffer, try

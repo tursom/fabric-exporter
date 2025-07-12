@@ -1,35 +1,31 @@
 package live.noumifuurinn.forgeexporter.metrics;
 
-import io.prometheus.client.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.entity.EntityLookup;
 import net.minecraft.world.level.entity.LevelEntityGetterAdapter;
+
+import java.util.List;
 
 /**
  * Get current count of all entities.
  */
 public class Entities extends WorldMetric {
-
-    private static final Gauge ENTITIES = Gauge.build()
-            .name(prefix("entities_total"))
-            .help("Entities loaded per world")
-            .labelNames("world", "mod")
-            .create();
-
-    public Entities() {
-        super(ENTITIES);
+    public Entities(MeterRegistry registry) {
+        super(registry);
     }
 
     @Override
-    protected void clear() {
-
-    }
-
-    @Override
-    public void collect(ServerLevel world) {
+    protected void register(ServerLevel world) {
         String name = world.dimension().location().getPath();
         String mod = world.dimension().location().getNamespace();
         LevelEntityGetterAdapter<Entity> getter = (LevelEntityGetterAdapter<Entity>) world.getEntities();
-        ENTITIES.labels(name, mod).set(getter.visibleEntities.count());
+        registry.gauge(
+                prefix("entities.total"),
+                List.of(Tag.of("world", name), Tag.of("mod", mod)),
+                getter.visibleEntities, EntityLookup::count
+        );
     }
 }

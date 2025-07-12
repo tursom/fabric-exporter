@@ -1,37 +1,22 @@
 package live.noumifuurinn.forgeexporter.metrics;
 
-import io.prometheus.client.Collector;
-import io.prometheus.client.CollectorRegistry;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public abstract class Metric {
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private final static String COMMON_PREFIX = "mc_";
+    private final static String COMMON_PREFIX = "mc.";
 
-    private final Collector collector;
-
+    protected final MeterRegistry registry;
     private boolean enabled = false;
 
-    protected Metric(Collector collector) {
-        this.collector = collector;
+    public Metric(MeterRegistry registry) {
+        this.registry = registry;
     }
 
-    public void collect() {
-
-        if (!enabled) {
-            return;
-        }
-
-        try {
-            doCollect();
-        } catch (Exception e) {
-            logException(e);
-        }
-    }
-
-    protected abstract void doCollect();
+    public abstract void register();
 
     private void logException(Exception e) {
         LOGGER.error("collect", e);
@@ -42,12 +27,13 @@ public abstract class Metric {
     }
 
     public void enable() {
-        CollectorRegistry.defaultRegistry.register(collector);
+        // TODO
         enabled = true;
+        register();
     }
 
     public void disable() {
-        CollectorRegistry.defaultRegistry.unregister(collector);
+        // TODO
         enabled = false;
     }
 

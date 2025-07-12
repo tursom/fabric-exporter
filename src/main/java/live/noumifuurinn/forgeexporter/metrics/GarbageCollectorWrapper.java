@@ -1,24 +1,18 @@
 package live.noumifuurinn.forgeexporter.metrics;
 
-import io.prometheus.client.Collector;
-import io.prometheus.client.hotspot.GarbageCollectorExports;
-
-import java.util.List;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.binder.jvm.JvmGcMetrics;
 
 public class GarbageCollectorWrapper extends Metric {
-    public GarbageCollectorWrapper() {
-        super(new GarbageCollectorExportsCollector());
+    private final JvmGcMetrics jvmGcMetrics = new JvmGcMetrics();
+
+    public GarbageCollectorWrapper(MeterRegistry registry) {
+        super(registry);
     }
 
     @Override
-    protected void doCollect() {}
-
-    private static class GarbageCollectorExportsCollector extends Collector {
-        private static final GarbageCollectorExports garbageCollectorExports = new GarbageCollectorExports();
-
-        @Override
-        public List<MetricFamilySamples> collect() {
-            return HotspotPrefixer.prefixFromCollector(garbageCollectorExports);
-        }
+    public void register() {
+        // 注册所有 JVM 相关指标
+        jvmGcMetrics.bindTo(registry);
     }
 }

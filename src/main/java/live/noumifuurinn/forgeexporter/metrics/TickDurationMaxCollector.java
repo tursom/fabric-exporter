@@ -1,17 +1,12 @@
 package live.noumifuurinn.forgeexporter.metrics;
 
-import io.prometheus.client.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
 
 public class TickDurationMaxCollector extends TickDurationCollector {
-    private static final String NAME = "tick_duration_max";
+    private static final String NAME = "tick.duration.max";
 
-    private static final Gauge TD = Gauge.build()
-            .name(prefix(NAME))
-            .help("Max duration of server tick (nanoseconds)")
-            .create();
-
-    public TickDurationMaxCollector() {
-        super(TD, NAME);
+    public TickDurationMaxCollector(MeterRegistry registry) {
+        super(registry);
     }
 
     private long getTickDurationMax() {
@@ -25,8 +20,9 @@ public class TickDurationMaxCollector extends TickDurationCollector {
     }
 
     @Override
-    public void doCollect() {
-        TD.set(getTickDurationMax());
+    public void register() {
+        io.micrometer.core.instrument.Gauge.builder(prefix(NAME), this, TickDurationMaxCollector::getTickDurationMax)
+                .register(registry);
     }
 }
 

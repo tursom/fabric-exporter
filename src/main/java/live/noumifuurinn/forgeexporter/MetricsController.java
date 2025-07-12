@@ -1,7 +1,6 @@
 package live.noumifuurinn.forgeexporter;
 
-import io.prometheus.client.CollectorRegistry;
-import io.prometheus.client.exporter.common.TextFormat;
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.server.Handler;
@@ -13,15 +12,16 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 
 public class MetricsController extends Handler.Abstract {
-    private final MetricRegistry metricRegistry = MetricRegistry.getInstance();
     private final FabricExporter exporter;
+    private final PrometheusMeterRegistry registry;
 
-    public MetricsController(FabricExporter exporter) {
+    public MetricsController(FabricExporter exporter, PrometheusMeterRegistry registry) {
         this.exporter = exporter;
+        this.registry = registry;
     }
 
     @Override
-    public boolean handle(Request request, Response response, Callback callback) throws Exception {
+    public boolean handle(Request request, Response response, Callback callback) {
         if (!request.getHttpURI().getPath().equals("/metrics")) {
             response.setStatus(HttpStatus.NOT_FOUND_404);
             callback.succeeded();
@@ -29,19 +29,15 @@ public class MetricsController extends Handler.Abstract {
         }
 
         try {
-            exporter.getServer().executeBlocking(() -> {
-                metricRegistry.collectMetrics();
-            });
-
             response.setStatus(HttpStatus.OK_200);
-            response.getHeaders().put(HttpHeader.CONTENT_TYPE, TextFormat.CONTENT_TYPE_004);
+            response.getHeaders().put(HttpHeader.CONTENT_TYPE, "text/plain; version=0.0.4; charset=utf-8");
             response.getHeaders().put(HttpHeader.CONTENT_ENCODING, "UTF-8");
 
             // 使用 OutputStreamWriter 写入响应
             try (OutputStreamWriter writer = new OutputStreamWriter(
                     Response.asBufferedOutputStream(request, response),
                     StandardCharsets.UTF_8)) {
-                TextFormat.write004(writer, CollectorRegistry.defaultRegistry.metricFamilySamples());
+                writer.append(registry.scrape());
             }
             callback.succeeded();
         } catch (Throwable e) {
