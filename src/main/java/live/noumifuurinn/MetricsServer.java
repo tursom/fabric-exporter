@@ -1,10 +1,12 @@
-package live.noumifuurinn.forgeexporter;
+package live.noumifuurinn;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.composite.CompositeMeterRegistry;
 import io.micrometer.prometheusmetrics.PrometheusConfig;
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
-import live.noumifuurinn.forgeexporter.metrics.*;
+import live.noumifuurinn.metrics.*;
+import live.noumifuurinn.utils.LambdaUtils;
+import live.noumifuurinn.utils.SerializableFunction;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import net.minecraft.util.StringUtil;
@@ -15,19 +17,47 @@ import org.eclipse.jetty.unixdomain.server.UnixDomainServerConnector;
 import java.net.InetSocketAddress;
 import java.net.UnixDomainSocketAddress;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
 
 @Slf4j
 public class MetricsServer {
+    private static final Map<SerializableFunction<Config.MetricsConfig, Boolean>, Function<MeterRegistry, Metric>> MERTIC_MAP;
+
+    static {
+        MERTIC_MAP = new HashMap<>();
+
+        MERTIC_MAP.put(Config.MetricsConfig::isProcessor, Processor::new);
+        MERTIC_MAP.put(Config.MetricsConfig::isGc, GarbageCollectorWrapper::new);
+        MERTIC_MAP.put(Config.MetricsConfig::isEntities, Entities::new);
+        MERTIC_MAP.put(Config.MetricsConfig::isLoadedChunks, LoadedChunks::new);
+        MERTIC_MAP.put(Config.MetricsConfig::isMemory, Memory::new);
+        MERTIC_MAP.put(Config.MetricsConfig::isPlayerOnline, PlayerOnline::new);
+        MERTIC_MAP.put(Config.MetricsConfig::isPlayersOnlineTotal, PlayersOnlineTotal::new);
+        MERTIC_MAP.put(Config.MetricsConfig::isThreads, ThreadsWrapper::new);
+        MERTIC_MAP.put(Config.MetricsConfig::isTickDurationAverage, TickDurationAverageCollector::new);
+        MERTIC_MAP.put(Config.MetricsConfig::isTickDurationMax, TickDurationMaxCollector::new);
+        MERTIC_MAP.put(Config.MetricsConfig::isTickDurationMedian, TickDurationMedianCollector::new);
+        MERTIC_MAP.put(Config.MetricsConfig::isTickDurationMin, TickDurationMinCollector::new);
+        MERTIC_MAP.put(Config.MetricsConfig::isTps, Tps::new);
+        MERTIC_MAP.put(Config.MetricsConfig::isWorldSize, WorldSize::new);
+    }
+
     private final CompositeMeterRegistry registry;
     private final FabricExporter prometheusExporter;
-    private final FabricExporterConfig config;
+    private final Config config;
+
+    private final Map<SerializableFunction<Config.MetricsConfig, Boolean>, Metric> metrics = new HashMap<>();
 
     private Server server;
 
-    public MetricsServer(CompositeMeterRegistry registry, FabricExporter prometheusExporter, FabricExporterConfig config) {
+    public MetricsServer(CompositeMeterRegistry registry, FabricExporter prometheusExporter, Config config) {
         this.registry = registry;
         this.prometheusExporter = prometheusExporter;
         this.config = config;
+
+        config.addReloadCallback(this::reloadMeters);
     }
 
     public void start() {
@@ -35,25 +65,33 @@ public class MetricsServer {
             startPrometheus(config.prometheus);
         }
 
-        new Processor(registry).enable();
-        new GarbageCollectorWrapper(registry).enable();
-        new Entities(registry).enable();
-        new LoadedChunks(registry).enable();
-        new Memory(registry).enable();
-        new PlayerOnline(registry).enable();
-        new PlayersOnlineTotal(registry).enable();
-        new ThreadsWrapper(registry).enable();
-        new TickDurationAverageCollector(registry).enable();
-        new TickDurationMaxCollector(registry).enable();
-        new TickDurationMedianCollector(registry).enable();
-        new TickDurationMinCollector(registry).enable();
-        new Tps(registry).enable();
-        new WorldSize(registry).enable();
+        reloadMeters();
+    }
 
+    private void reloadMeters() {
+        MERTIC_MAP.forEach((metricConf, getter) -> {
+            Metric metric = metrics.computeIfAbsent(metricConf, ignore -> getter.apply(registry));
+            String metricPath = LambdaUtils.getPropertyName(metricConf);
+            if (metricConf.apply(config.metrics)) {
+                try {
+                    metric.enable();
+                    log.info("enable metric {}", metricPath);
+                } catch (Exception e) {
+                    log.warn("failed to enable metric {}", metricPath, e);
+                }
+            } else {
+                try {
+                    metric.disable();
+                    log.info("disable metric {}", metricPath);
+                } catch (Exception e) {
+                    log.warn("failed to disable metric {}", metricPath, e);
+                }
+            }
+        });
     }
 
     @SneakyThrows
-    private void startPrometheus(FabricExporterConfig.PrometheusConfig config) {
+    private void startPrometheus(Config.PrometheusConfig config) {
         PrometheusMeterRegistry prometheusMeterRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
         registry.add(prometheusMeterRegistry);
 

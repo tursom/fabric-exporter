@@ -1,6 +1,11 @@
-package live.noumifuurinn.forgeexporter.metrics;
+package live.noumifuurinn.metrics;
 
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
+
+import java.util.Collection;
+import java.util.List;
 
 public class TickDurationMaxCollector extends TickDurationCollector {
     private static final String NAME = "tick.duration.max";
@@ -20,10 +25,10 @@ public class TickDurationMaxCollector extends TickDurationCollector {
     }
 
     @Override
-    public void register() {
-        io.micrometer.core.instrument.Gauge.builder(prefix(NAME), this, TickDurationMaxCollector::getTickDurationMax)
+    public Collection<Meter> register() {
+        return List.of(Gauge.builder(prefix(NAME), this, TickDurationMaxCollector::getTickDurationMax)
                 .strongReference(true)
-                .register(registry);
+                .register(registry));
     }
 }
 

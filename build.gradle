@@ -60,14 +60,6 @@ dependencies {
         exclude group: "org.slf4j", module: "slf4j-simple"
         exclude group: "org.slf4j", module: "slf4j-log4j12"
     }
-    shadow(implementation("org.eclipse.jetty:jetty-server:${jettyVersion}")) {
-        exclude group: "org.apache.logging.log4j", module: "log4j-api"
-        exclude group: "org.apache.logging.log4j", module: "log4j-core"
-        exclude group: "commons-logging", module: "commons-logging"
-        exclude group: "org.slf4j", module: "slf4j-api"
-        exclude group: "org.slf4j", module: "slf4j-simple"
-        exclude group: "org.slf4j", module: "slf4j-log4j12"
-    }
 
     // lombok
     def lombokVersion = "1.18.38"

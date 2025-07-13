@@ -1,9 +1,13 @@
-package live.noumifuurinn.forgeexporter.metrics;
+package live.noumifuurinn.metrics;
 
 import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
-import live.noumifuurinn.forgeexporter.FabricExporter;
-import live.noumifuurinn.forgeexporter.tps.TpsCollector;
+import live.noumifuurinn.FabricExporter;
+import live.noumifuurinn.tps.TpsCollector;
+
+import java.util.Collection;
+import java.util.List;
 
 public class Tps extends Metric {
     private final TpsCollector tpsCollector = new TpsCollector();
@@ -25,9 +29,9 @@ public class Tps extends Metric {
     }
 
     @Override
-    public void register() {
-        Gauge.builder(prefix("tps"), tpsCollector, TpsCollector::getAverageTPS)
+    public Collection<Meter> register() {
+        return List.of(Gauge.builder(prefix("tps"), tpsCollector, TpsCollector::getAverageTPS)
                 .description("Server TPS (ticks per second)")
-                .register(registry);
+                .register(registry));
     }
 }

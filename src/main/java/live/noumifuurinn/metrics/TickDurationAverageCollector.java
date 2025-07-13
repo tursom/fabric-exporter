@@ -1,8 +1,12 @@
-package live.noumifuurinn.forgeexporter.metrics;
+package live.noumifuurinn.metrics;
 
 
 import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
+
+import java.util.Collection;
+import java.util.List;
 
 public class TickDurationAverageCollector extends TickDurationCollector {
     private static final String NAME = "tick.duration.average";
@@ -22,9 +26,9 @@ public class TickDurationAverageCollector extends TickDurationCollector {
     }
 
     @Override
-    public void register() {
-        Gauge.builder(prefix(NAME), this, TickDurationAverageCollector::getTickDurationAverage)
+    public Collection<Meter> register() {
+        return List.of(Gauge.builder(prefix(NAME), this, TickDurationAverageCollector::getTickDurationAverage)
                 .strongReference(true)
-                .register(registry);
+                .register(registry));
     }
 }

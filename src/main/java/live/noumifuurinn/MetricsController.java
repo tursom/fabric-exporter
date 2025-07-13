@@ -1,4 +1,4 @@
-package live.noumifuurinn.forgeexporter;
+package live.noumifuurinn;
 
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
 import org.eclipse.jetty.http.HttpHeader;

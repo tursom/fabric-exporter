@@ -11,7 +11,7 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      "live.noumifuurinn.forgeexporter.FabricExporter"
+      "live.noumifuurinn.FabricExporter"
     ]
   },
   "mixins": [

@@ -1,7 +1,6 @@
-package live.noumifuurinn.forgeexporter;
+package live.noumifuurinn;
 
 import io.micrometer.core.instrument.composite.CompositeMeterRegistry;
-import lombok.SneakyThrows;
 import me.shedaniel.autoconfig.AutoConfig;
 import me.shedaniel.autoconfig.serializer.Toml4jConfigSerializer;
 import net.fabricmc.api.ModInitializer;
@@ -18,14 +17,14 @@ public class FabricExporter implements ModInitializer {
     private static MinecraftServer mcServer;
     private static final Map<Object, Runnable> serverTickReg = new java.util.concurrent.ConcurrentHashMap<>();
     private static final CompositeMeterRegistry registry = new CompositeMeterRegistry();
-    private static FabricExporterConfig config;
+    private static Config config;
 
     private MetricsServer metricsServer;
 
     @Override
     public void onInitialize() {
-        AutoConfig.register(FabricExporterConfig.class, Toml4jConfigSerializer::new);
-        config = AutoConfig.getConfigHolder(FabricExporterConfig.class).getConfig();
+        AutoConfig.register(Config.class, Toml4jConfigSerializer::new);
+        config = AutoConfig.getConfigHolder(Config.class).getConfig();
         metricsServer = new MetricsServer(registry, this, config);
 
         // 注册服务器启动事件

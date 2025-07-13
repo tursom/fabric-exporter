@@ -1,7 +1,11 @@
-package live.noumifuurinn.forgeexporter.metrics;
+package live.noumifuurinn.metrics;
 
 import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
+
+import java.util.Collection;
+import java.util.List;
 
 public class TickDurationMinCollector extends TickDurationCollector {
     private static final String NAME = "tick.duration.min";
@@ -21,10 +25,10 @@ public class TickDurationMinCollector extends TickDurationCollector {
     }
 
     @Override
-    public void register() {
-        Gauge.builder(prefix(NAME), this, TickDurationMinCollector::getTickDurationMin)
+    public Collection<Meter> register() {
+        return List.of(Gauge.builder(prefix(NAME), this, TickDurationMinCollector::getTickDurationMin)
                 .strongReference(true)
-                .register(registry);
+                .register(registry));
     }
 }
 

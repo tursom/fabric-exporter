@@ -1,4 +1,4 @@
-package live.noumifuurinn.forgeexporter.utils;
+package live.noumifuurinn.utils;
 
 import lombok.extern.slf4j.Slf4j;
 

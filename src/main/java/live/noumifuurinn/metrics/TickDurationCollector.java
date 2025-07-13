@@ -1,7 +1,7 @@
-package live.noumifuurinn.forgeexporter.metrics;
+package live.noumifuurinn.metrics;
 
 import io.micrometer.core.instrument.MeterRegistry;
-import live.noumifuurinn.forgeexporter.FabricExporter;
+import live.noumifuurinn.FabricExporter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
