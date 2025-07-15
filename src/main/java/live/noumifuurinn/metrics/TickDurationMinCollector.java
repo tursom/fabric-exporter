@@ -8,8 +8,6 @@ import java.util.Collection;
 import java.util.List;
 
 public class TickDurationMinCollector extends TickDurationCollector {
-    private static final String NAME = "tick.duration.min";
-
     public TickDurationMinCollector(MeterRegistry registry) {
         super(registry);
     }
@@ -26,7 +24,7 @@ public class TickDurationMinCollector extends TickDurationCollector {
 
     @Override
     public Collection<Meter> register() {
-        return List.of(Gauge.builder(prefix(NAME), this, TickDurationMinCollector::getTickDurationMin)
+        return List.of(Gauge.builder("tick.duration.min", this, TickDurationMinCollector::getTickDurationMin)
                 .strongReference(true)
                 .register(registry));
     }

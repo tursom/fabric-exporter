@@ -25,7 +25,7 @@ public class TpsCollector implements Runnable {
     static final int TPS_QUEUE_SIZE = 10;
 
     final private Supplier<Long> systemTimeSupplier;
-    private LinkedList<Float> tpsQueue = new LinkedList<>();
+    private final LinkedList<Float> tpsQueue = new LinkedList<>();
     private long lastPoll;
     private int ticks;
 

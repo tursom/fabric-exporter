@@ -10,11 +10,9 @@ import java.util.Collections;
 
 @Slf4j
 public abstract class Metric {
-    private final static String COMMON_PREFIX = "mc.";
-
     protected final MeterRegistry registry;
     @Getter
-    private boolean enabled = false;
+    protected boolean enabled = false;
 
     protected Collection<Meter> meters = Collections.emptyList();
 
@@ -23,10 +21,6 @@ public abstract class Metric {
     }
 
     public abstract Collection<Meter> register();
-
-    protected static String prefix(String name) {
-        return COMMON_PREFIX + name;
-    }
 
     public void enable() {
         if (enabled) {
@@ -50,5 +44,7 @@ public abstract class Metric {
                 log.warn("Failed to remove meter: {}", meter.getId(), e);
             }
         }
+
+        meters = Collections.emptyList();
     }
 }

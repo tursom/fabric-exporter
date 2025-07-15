@@ -1,12 +1,11 @@
 package live.noumifuurinn.metrics;
 
-import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.binder.MeterBinder;
 import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics;
+import lombok.NonNull;
 
-import java.util.Collection;
-
-public class ThreadsWrapper extends Metric {
+public class ThreadsWrapper extends BinderMetric {
     private final JvmThreadMetrics jvmThreadMetrics = new JvmThreadMetrics();
 
     public ThreadsWrapper(MeterRegistry registry) {
@@ -14,17 +13,8 @@ public class ThreadsWrapper extends Metric {
     }
 
     @Override
-    public Collection<Meter> register() {
-        jvmThreadMetrics.bindTo(registry);
-        return meters;
+    protected @NonNull MeterBinder meterBinder() {
+        return jvmThreadMetrics;
     }
 
-    @Override
-    public void disable() {
-        if (!isEnabled()) {
-            return;
-        }
-
-        throw new UnsupportedOperationException("thread metrics cannot be disable on runtime");
-    }
 }

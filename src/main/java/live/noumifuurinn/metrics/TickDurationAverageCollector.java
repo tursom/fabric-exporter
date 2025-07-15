@@ -9,9 +9,6 @@ import java.util.Collection;
 import java.util.List;
 
 public class TickDurationAverageCollector extends TickDurationCollector {
-    private static final String NAME = "tick.duration.average";
-
-
     public TickDurationAverageCollector(MeterRegistry registry) {
         super(registry);
     }
@@ -27,7 +24,7 @@ public class TickDurationAverageCollector extends TickDurationCollector {
 
     @Override
     public Collection<Meter> register() {
-        return List.of(Gauge.builder(prefix(NAME), this, TickDurationAverageCollector::getTickDurationAverage)
+        return List.of(Gauge.builder("tick.duration.average", this, TickDurationAverageCollector::getTickDurationAverage)
                 .strongReference(true)
                 .register(registry));
     }

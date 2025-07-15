@@ -1,7 +1,7 @@
 package live.noumifuurinn.metrics;
 
 import io.micrometer.core.instrument.MeterRegistry;
-import live.noumifuurinn.FabricExporter;
+import live.noumifuurinn.utils.CommonUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -24,7 +24,7 @@ public abstract class TickDurationCollector extends Metric {
          * work across many versions of Spigot/Paper and various obfuscation mappings
          */
         if (tickDurationReference == null) {
-            long[] longestArray = FabricExporter.getServer().getTickTimesNanos();
+            long[] longestArray = CommonUtils.getTickTimesNanos();
 
             if (longestArray != null) {
                 tickDurationReference = longestArray;

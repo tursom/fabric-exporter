@@ -3,7 +3,7 @@ package live.noumifuurinn.metrics;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
-import live.noumifuurinn.FabricExporter;
+import live.noumifuurinn.utils.CommonUtils;
 import live.noumifuurinn.utils.PathFileSize;
 import lombok.SneakyThrows;
 import net.minecraft.server.level.ServerLevel;
@@ -20,8 +20,8 @@ public class WorldSize extends WorldMetric {
     protected Meter register(ServerLevel world) {
         String worldName = world.dimension().location().getPath();
         String mod = world.dimension().location().getNamespace();
-        return Gauge.builder(prefix("world.size"), world, w -> {
-                    Path path = FabricExporter.getServer().storageSource.getDimensionPath(w.dimension());
+        return Gauge.builder("world.size", world, w -> {
+                    Path path = CommonUtils.getServer().storageSource.getDimensionPath(w.dimension());
                     PathFileSize pathUtils = new PathFileSize(path);
                     return pathUtils.getSize();
                 })

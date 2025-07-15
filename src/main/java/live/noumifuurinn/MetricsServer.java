@@ -34,7 +34,7 @@ public class MetricsServer {
         MERTIC_MAP.put(Config.MetricsConfig::isLoadedChunks, LoadedChunks::new);
         MERTIC_MAP.put(Config.MetricsConfig::isMemory, Memory::new);
         MERTIC_MAP.put(Config.MetricsConfig::isPlayerOnline, PlayerOnline::new);
-        MERTIC_MAP.put(Config.MetricsConfig::isPlayersOnlineTotal, PlayersOnlineTotal::new);
+        MERTIC_MAP.put(Config.MetricsConfig::isPlayersWorld, WorldPlayers::new);
         MERTIC_MAP.put(Config.MetricsConfig::isThreads, ThreadsWrapper::new);
         MERTIC_MAP.put(Config.MetricsConfig::isTickDurationAverage, TickDurationAverageCollector::new);
         MERTIC_MAP.put(Config.MetricsConfig::isTickDurationMax, TickDurationMaxCollector::new);

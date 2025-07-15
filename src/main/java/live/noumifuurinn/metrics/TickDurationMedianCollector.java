@@ -9,8 +9,6 @@ import java.util.Collection;
 import java.util.List;
 
 public class TickDurationMedianCollector extends TickDurationCollector {
-    private static final String NAME = "tick.duration.median";
-
     public TickDurationMedianCollector(MeterRegistry registry) {
         super(registry);
     }
@@ -24,7 +22,7 @@ public class TickDurationMedianCollector extends TickDurationCollector {
 
     @Override
     public Collection<Meter> register() {
-        return List.of(Gauge.builder(prefix(NAME), this, TickDurationMedianCollector::getTickDurationMedian)
+        return List.of(Gauge.builder("tick.duration.median", this, TickDurationMedianCollector::getTickDurationMedian)
                 .strongReference(true)
                 .register(registry));
     }

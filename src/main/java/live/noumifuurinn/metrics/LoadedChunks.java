@@ -15,7 +15,7 @@ public class LoadedChunks extends WorldMetric {
         String name = world.dimension().location().getPath();
         String mod = world.dimension().location().getNamespace();
 
-        return Gauge.builder(prefix("loaded.chunks.total"), world, w -> w.getChunkSource().getLoadedChunksCount())
+        return Gauge.builder("loaded.chunks.total", world, w -> w.getChunkSource().getLoadedChunksCount())
                 .tag("world", name)
                 .tag("mod", mod)
                 .register(registry);

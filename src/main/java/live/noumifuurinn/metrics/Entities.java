@@ -20,7 +20,7 @@ public class Entities extends WorldMetric {
         String name = world.dimension().location().getPath();
         String mod = world.dimension().location().getNamespace();
 
-        return Gauge.builder(prefix("entities.total"), world, Entities::getEntityCount)
+        return Gauge.builder("entities.total", world, Entities::getEntityCount)
                 .tag("world", name)
                 .tag("mod", mod)
                 .register(registry);

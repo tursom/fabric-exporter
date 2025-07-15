@@ -8,8 +8,6 @@ import java.util.Collection;
 import java.util.List;
 
 public class TickDurationMaxCollector extends TickDurationCollector {
-    private static final String NAME = "tick.duration.max";
-
     public TickDurationMaxCollector(MeterRegistry registry) {
         super(registry);
     }
@@ -26,7 +24,7 @@ public class TickDurationMaxCollector extends TickDurationCollector {
 
     @Override
     public Collection<Meter> register() {
-        return List.of(Gauge.builder(prefix(NAME), this, TickDurationMaxCollector::getTickDurationMax)
+        return List.of(Gauge.builder("tick.duration.max", this, TickDurationMaxCollector::getTickDurationMax)
                 .strongReference(true)
                 .register(registry));
     }

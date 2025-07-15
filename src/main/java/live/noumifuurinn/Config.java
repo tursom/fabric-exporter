@@ -7,13 +7,17 @@ import me.shedaniel.autoconfig.ConfigData;
 import me.shedaniel.autoconfig.annotation.ConfigEntry;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @me.shedaniel.autoconfig.annotation.Config(name = "fabric-exporter")
 public class Config implements ConfigData {
     private transient final List<Runnable> loadListeners = new ArrayList<>();
 
+    public String prefix = "mc.";
+    public Map<String, String> tags = Collections.emptyMap();
     public PrometheusConfig prometheus = new PrometheusConfig();
     public MetricsConfig metrics = new MetricsConfig();
 
@@ -37,7 +41,7 @@ public class Config implements ConfigData {
         public boolean loadedChunks = true;
         public boolean memory = true;
         public boolean playerOnline = true;
-        public boolean playersOnlineTotal = true;
+        public boolean playersWorld = true;
         public boolean threads = true;
         public boolean tickDurationAverage = true;
         public boolean tickDurationMax = true;
@@ -48,7 +52,7 @@ public class Config implements ConfigData {
     }
 
     @Override
-    public void validatePostLoad() throws ValidationException {
+    public void validatePostLoad() {
         for (Runnable loadListener : loadListeners) {
             try {
                 loadListener.run();

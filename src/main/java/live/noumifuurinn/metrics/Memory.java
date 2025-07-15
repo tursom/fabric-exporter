@@ -1,12 +1,11 @@
 package live.noumifuurinn.metrics;
 
-import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.binder.MeterBinder;
 import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics;
+import lombok.NonNull;
 
-import java.util.Collection;
-
-public class Memory extends Metric {
+public class Memory extends BinderMetric {
     private final JvmMemoryMetrics jvmMemoryMetrics = new JvmMemoryMetrics();
 
     public Memory(MeterRegistry registry) {
@@ -14,17 +13,7 @@ public class Memory extends Metric {
     }
 
     @Override
-    public Collection<Meter> register() {
-        jvmMemoryMetrics.bindTo(registry);
-        return meters;
-    }
-
-    @Override
-    public void disable() {
-        if (!isEnabled()) {
-            return;
-        }
-
-        throw new UnsupportedOperationException("memory metrics cannot be disable on runtime");
+    protected @NonNull MeterBinder meterBinder() {
+        return jvmMemoryMetrics;
     }
 }

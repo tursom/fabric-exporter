@@ -3,8 +3,8 @@ package live.noumifuurinn.metrics;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
-import live.noumifuurinn.FabricExporter;
 import live.noumifuurinn.tps.TpsCollector;
+import live.noumifuurinn.utils.CommonUtils;
 
 import java.util.Collection;
 import java.util.List;
@@ -19,18 +19,18 @@ public class Tps extends Metric {
     @Override
     public void enable() {
         super.enable();
-        FabricExporter.registerServerTickEvent(this, tpsCollector);
+        CommonUtils.registerServerTickEvent(this, tpsCollector);
     }
 
     @Override
     public void disable() {
         super.disable();
-        FabricExporter.unregisterServerTickEvent(this);
+        CommonUtils.unregisterServerTickEvent(this);
     }
 
     @Override
     public Collection<Meter> register() {
-        return List.of(Gauge.builder(prefix("tps"), tpsCollector, TpsCollector::getAverageTPS)
+        return List.of(Gauge.builder("tps", tpsCollector, TpsCollector::getAverageTPS)
                 .description("Server TPS (ticks per second)")
                 .register(registry));
     }
